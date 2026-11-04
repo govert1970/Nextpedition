@@ -6,7 +6,7 @@ import type { EntryData, MomentInhoud } from '@/config/dag';
 import type { Versleuteld } from '@/lib/crypto';
 
 export type BundelMoment =
-  | { id: string; route: string; soort: string; dicht: false; inhoud: MomentInhoud }
+  | { id: string; route: string; soort: string; dicht: false; inhoud: MomentInhoud; opent?: string; sluit?: string }
   | { id: string; route: string; soort: string; dicht: true; slot: Versleuteld };
 
 export type Bundel = {
@@ -14,7 +14,7 @@ export type Bundel = {
   event: { naam: string; datum: string | null };
   momenten: BundelMoment[];
   entries: Record<string, { data: EntryData; updated_at: string }>;
-  opnames: { client_id: string; moment_id: string; duur_sec: number | null }[];
+  opnames: { client_id: string; moment_id: string; duur_sec: number | null; transcript?: string | null }[];
 };
 
 export type LokaleInvoer = { data: EntryData; updated_at: string; teVersturen: boolean };

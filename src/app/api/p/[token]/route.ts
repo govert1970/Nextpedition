@@ -8,7 +8,7 @@ export async function GET(_req: Request, { params }: { params: { token: string }
   const { deelnemer, event } = r;
   const [{ data: entries }, { data: opnames }] = await Promise.all([
     db().from('entries').select('moment_id, data, updated_at').eq('participant_id', deelnemer.id),
-    db().from('recordings').select('client_id, moment_id, duur_sec').eq('participant_id', deelnemer.id),
+    db().from('recordings').select('client_id, moment_id, duur_sec, transcript, created_at').order('created_at').eq('participant_id', deelnemer.id),
   ]);
   await db().from('participants').update({ laatst_actief: new Date().toISOString() }).eq('id', deelnemer.id);
   return json({

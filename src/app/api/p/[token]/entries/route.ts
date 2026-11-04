@@ -3,6 +3,7 @@ import { db, deelnemerBijToken, json } from '@/lib/server';
 
 export const dynamic = 'force-dynamic';
 const IDS = new Set(MOMENTEN.map((m) => m.id));
+const PER_ID = new Map(MOMENTEN.map((m) => [m.id, m]));
 const MAX = 40_000;
 
 export async function PUT(req: Request, { params }: { params: { token: string } }) {
@@ -14,6 +15,11 @@ export async function PUT(req: Request, { params }: { params: { token: string } 
   try { body = JSON.parse(tekst); } catch { return json({ fout: 'Ongeldige invoer.' }, 400); }
   if (!body.moment_id || !IDS.has(body.moment_id) || typeof body.data !== 'object' || body.data === null) {
     return json({ fout: 'Ongeldige invoer.' }, 400);
+  }
+  const m = PER_ID.get(body.moment_id)!;
+  const nu = Date.now();
+  if ((m.opent && nu < Date.parse(m.opent)) || (m.sluit && nu > Date.parse(m.sluit))) {
+    return json({ fout: 'Dit moment is nu niet open.' }, 403);
   }
   const updated_at = body.updated_at && !Number.isNaN(Date.parse(body.updated_at)) ? body.updated_at : new Date().toISOString();
   // Laatste schrijver wint, maar een oudere versie overschrijft nooit een nieuwere.

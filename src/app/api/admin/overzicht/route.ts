@@ -10,7 +10,7 @@ export async function GET() {
   const [{ data: deelnemers }, { data: entries }, { data: opnames }] = await Promise.all([
     db().from('participants').select('id, naam, telefoon, token, voorbereiding, laatst_actief').eq('event_id', event.id).order('naam'),
     db().from('entries').select('participant_id, moment_id'),
-    db().from('recordings').select('participant_id'),
+    db().from('recordings').select('participant_id, transcript'),
   ]);
   const ingevuld = new Map<string, Set<string>>();
   for (const e of entries ?? []) {
@@ -23,6 +23,7 @@ export async function GET() {
     event,
     basis: process.env.PUBLIC_BASE_URL ?? '',
     momenten: MOMENTEN.map((m) => ({ id: m.id, titel: m.inhoud.titel, route: m.route, code: CODEWOORDEN[m.id] ?? null })),
+    opnames: { totaal: (opnames ?? []).length, uitgeschreven: (opnames ?? []).filter((o) => o.transcript !== null).length },
     deelnemers: (deelnemers ?? []).map((d) => ({
       ...d,
       ingevuld: [...(ingevuld.get(d.id) ?? [])],

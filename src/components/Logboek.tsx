@@ -37,6 +37,11 @@ const Topo = () => (
   </svg>
 );
 
+function datumNL(iso?: string): string {
+  if (!iso) return 'later';
+  return new Date(iso).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' });
+}
+
 function heeftInhoud(d?: EntryData): boolean {
   if (!d) return false;
   return Boolean(d.notes?.trim() || d.door?.trim() || d.keuze || Object.values(d.fields ?? {}).some((v) => v?.trim()));
@@ -125,10 +130,20 @@ export default function Logboek({ token }: { token: string }) {
   if (fout) return <main className="app"><div className="melding"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXTPEDITION</span><p>{fout}</p></div></main>;
   if (!bundel) return <main className="app"><div className="melding"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXTPEDITION</span><p className="mono gedempt">Laden…</p></div></main>;
 
-  const isKlaar = (id: string) => klaar.has(id) || opnameMomenten.has(id);
-  const aantalKlaar = momenten.filter((m) => isKlaar(m.id)).length;
+  const nu = Date.now();
+  const tijdStatus = (m: Bundel['momenten'][number]): 'voor' | 'open' | 'na' => {
+    if (m.dicht) return 'open';
+    if (m.opent && nu < Date.parse(m.opent)) return 'voor';
+    if (m.sluit && nu > Date.parse(m.sluit)) return 'na';
+    return 'open';
+  };
+  const metInvoer = (id: string) => { const i = open[id]; return !i || Boolean(i.vraag || i.velden?.length || i.energiekaart); };
+  const telbaar = momenten.filter((m) => m.soort !== 'terugblik' && metInvoer(m.id));
+  const isKlaar = (id: string) => (metInvoer(id) ? klaar.has(id) || opnameMomenten.has(id) : Boolean(open[id]));
+  const aantalKlaar = telbaar.filter((m) => isKlaar(m.id)).length;
   const nuId = [...momenten].reverse().find((m) => open[m.id] && m.dicht && !isKlaar(m.id))?.id
-    ?? momenten.find((m) => open[m.id] && !isKlaar(m.id))?.id;
+    ?? momenten.find((m) => open[m.id] && tijdStatus(m) === 'open' && !isKlaar(m.id))?.id;
+
 
   const statusRegel = !online ? 'Geen bereik · alles blijft bewaard op je telefoon'
     : wachtend > 0 ? `${wachtend} nog te versturen` : 'Alles is bewaard';
@@ -143,14 +158,15 @@ export default function Logboek({ token }: { token: string }) {
           <h1 style={{ marginTop: 8, fontSize: 46 }}>Welkom,<br />{voornaam}</h1>
           <p className="lead">Zes legs, één route. Na elke leg houd je vast wat je raakte, door te typen of in te spreken.</p>
           <div className="sectie" style={{ gap: 8, marginTop: 6 }}>
-            <div className="rij mono licht"><span>{aantalKlaar} van {momenten.length} vastgelegd</span><span>{statusRegel}</span></div>
-            <div className="balk"><i style={{ width: `${(aantalKlaar / momenten.length) * 100}%` }} /></div>
+            <div className="rij mono licht"><span>{aantalKlaar} van {telbaar.length} vastgelegd</span><span>{statusRegel}</span></div>
+            <div className="balk"><i style={{ width: `${(aantalKlaar / Math.max(1, telbaar.length)) * 100}%` }} /></div>
           </div>
         </header>
         <div className="inhoud" style={{ paddingTop: 14 }}>
           <ol className="route" aria-label="Route van de dag">
             {momenten.map((m) => {
-              const isOpen = Boolean(open[m.id]);
+              const ts = tijdStatus(m);
+              const isOpen = Boolean(open[m.id]) && ts === 'open';
               const k = isKlaar(m.id);
               const cls = ['stop', k ? 'klaar' : '', m.id === nuId ? 'nu' : '', !isOpen ? 'dicht' : ''].join(' ');
               return (
@@ -159,7 +175,7 @@ export default function Logboek({ token }: { token: string }) {
                     <span className="stip">{k && <Vinkje />}</span>
                     <span className="t">
                       <span className="mono gedempt" style={{ fontSize: 10.5 }}>{isOpen ? open[m.id].label : m.route.toUpperCase()}</span>
-                      <b>{isOpen ? open[m.id].titel : 'Gaat open bij het waypoint'}</b>
+                      <b>{isOpen ? open[m.id].titel : ts === 'voor' ? `Gaat open op ${datumNL(m.dicht ? undefined : m.opent)}` : ts === 'na' ? `${open[m.id]?.titel ?? m.route} · gesloten` : 'Gaat open bij het waypoint'}</b>
                     </span>
                     {!isOpen ? <span className="slotje"><Slot /></span> : m.id === nuId ? <span className="label-goud">NU</span> : <span />}
                   </button>
@@ -175,7 +191,8 @@ export default function Logboek({ token }: { token: string }) {
   const idx = momenten.findIndex((m) => m.id === weergave.id);
   const m = momenten[idx];
   const volgende = momenten[idx + 1];
-  const inhoud = open[m.id];
+  const ts = tijdStatus(m);
+  const inhoud = ts === 'voor' ? undefined : open[m.id];
   const naarRoute = () => { setWeergave({ soort: 'route' }); window.scrollTo(0, 0); };
   const naar = (id: string) => { setWeergave({ soort: 'moment', id }); window.scrollTo(0, 0); };
 
@@ -183,7 +200,11 @@ export default function Logboek({ token }: { token: string }) {
   let vorige: { titel: string; zin: string } | null = null;
   for (let j = idx - 1; j >= 0; j--) {
     const vi = open[momenten[j].id];
-    if (vi?.doorgeef) { const zin = invoer[momenten[j].id]?.data.door?.trim(); if (zin) vorige = { titel: vi.titel, zin }; break; }
+    if (vi?.doorgeef) {
+      const tekst = invoer[momenten[j].id]?.data.notes?.trim();
+      if (tekst) vorige = { titel: vi.titel, zin: tekst.length > 220 ? `${tekst.slice(0, 217)}…` : tekst };
+      break;
+    }
   }
 
   return (
@@ -211,10 +232,12 @@ export default function Logboek({ token }: { token: string }) {
       </header>
       {inhoud
         ? <MomentScherm key={m.id} token={token} id={m.id} inhoud={inhoud} bundel={bundel} invoer={invoer[m.id]?.data ?? {}}
-            opnames={opnames} bewaar={bewaar} onOpname={sync} status={statusRegel}
+            opnames={opnames} bewaar={bewaar} onOpname={sync} status={statusRegel} gesloten={ts === 'na'} open={open} invoerAlles={invoer}
             volgende={volgende ? { titel: open[volgende.id]?.titel ?? volgende.route, ga: () => naar(volgende.id) } : null}
             klaar={naarRoute} />
-        : <Ontgrendel key={m.id} ontgrendel={ontgrendel} />}
+        : ts === 'voor'
+          ? <div className="inhoud"><div className="slotkaart"><p>Dit moment gaat vanzelf open op {datumNL(m.dicht ? undefined : m.opent)}. Je hoeft dan geen codewoord in te vullen.</p></div></div>
+          : <Ontgrendel key={m.id} ontgrendel={ontgrendel} />}
     </main>
   );
 }
@@ -245,34 +268,68 @@ function Ontgrendel({ ontgrendel }: { ontgrendel: (c: string) => Promise<string[
   );
 }
 
-function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOpname, status, volgende, klaar }: {
+function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOpname, status, volgende, klaar, gesloten, open, invoerAlles }: {
   token: string; id: string; inhoud: MomentInhoud; bundel: Bundel; invoer: EntryData; opnames: OpnameMeta[];
   bewaar: (id: string, d: EntryData) => void; onOpname: () => void; status: string;
   volgende: { titel: string; ga: () => void } | null; klaar: () => void;
+  gesloten: boolean; open: Record<string, MomentInhoud>; invoerAlles: Record<string, LokaleInvoer>;
 }) {
   const [data, setData] = useState<EntryData>(invoer);
   const zet = (patch: Partial<EntryData>) => { const nieuw = { ...data, ...patch }; setData(nieuw); bewaar(id, nieuw); };
   const zetVeld = (vid: string, v: string) => zet({ fields: { ...(data.fields ?? {}), [vid]: v } });
   const hoofdstukken = bundel.deelnemer.voorbereiding?.hoofdstukken?.filter((h) => h.titel?.trim()) ?? [];
 
-  if (id === 'slot') {
+  if (id === 'terugblik') {
+    const vb = bundel.deelnemer.voorbereiding ?? {};
+    const momentenMetInvoer = bundel.momenten.filter((m) => m.id !== 'terugblik' && open[m.id] && (open[m.id].vraag || open[m.id].velden?.length));
     return (
       <div className="inhoud">
-        <p style={{ color: 'var(--gedempt)' }}>{inhoud.concept}</p>
-        <div className="keuzes">
-          {(Object.keys(SLOT_KEUZES) as (keyof typeof SLOT_KEUZES)[]).map((k) => (
-            <button key={k} type="button" className="keuze" aria-pressed={data.keuze === k} onClick={() => zet({ keuze: k })}>
-              <b>{SLOT_KEUZES[k].label}</b><span>{SLOT_KEUZES[k].uitleg}</span>
-            </button>
-          ))}
-        </div>
-        <div className="veld">
-          <label htmlFor="waarom">Waarom kies je dit?</label>
-          <textarea id="waarom" style={{ minHeight: 110 }} value={data.waarom ?? ''} onChange={(e) => zet({ waarom: e.target.value })} placeholder="Een paar zinnen is genoeg" />
-        </div>
-        <p className="status" aria-live="polite">{status}</p>
-        <button type="button" className="knop" onClick={klaar}><span>Afronden</span><Pijl /></button>
-        <p style={{ fontSize: 14, color: 'var(--gedempt)' }}>Je verslag krijg je de ochtend na de dag van Govert, via WhatsApp.</p>
+        {inhoud.concept && <p style={{ color: 'var(--gedempt)' }}>{inhoud.concept}</p>}
+        <section className="kaart">
+          <span className="mono gedempt">Jouw dag</span>
+          {vb.vak && <p><b>Je vak:</b> {vb.vak}</p>}
+          {hoofdstukken.length > 0 && <p><b>Je hoofdstukken:</b> {hoofdstukken.map((h) => h.titel).join(' · ')}</p>}
+          {momentenMetInvoer.map((m) => {
+            const d = invoerAlles[m.id]?.data;
+            const velden = (open[m.id].velden ?? []).map((v) => [v.label, d?.fields?.[v.id]?.trim()] as const).filter(([, w]) => w);
+            const gesproken = bundel.opnames.filter((o) => o.moment_id === m.id);
+            const tekst = d?.notes?.trim();
+            if (!tekst && !velden.length && !gesproken.length) return null;
+            return (
+              <div key={m.id} className="voetregel" style={{ display: 'flex', flexDirection: 'column', gap: 4, color: 'var(--inkt)', fontSize: 15 }}>
+                <b>{open[m.id].titel}</b>
+                {velden.map(([l, w]) => <p key={l}><span style={{ color: 'var(--gedempt)' }}>{l}:</span> {w}</p>)}
+                {tekst && <p style={{ whiteSpace: 'pre-wrap' }}>{tekst}</p>}
+                {gesproken.map((o) => o.transcript
+                  ? <p key={o.client_id} style={{ whiteSpace: 'pre-wrap' }}>{o.transcript}</p>
+                  : <p key={o.client_id} style={{ color: 'var(--gedempt)', fontStyle: 'italic' }}>Ingesproken notitie, wordt nog uitgeschreven.</p>)}
+              </div>
+            );
+          })}
+        </section>
+        {gesloten ? (
+          <p className="slotkaart">De terugblik is gesloten. Je verslag komt binnenkort via Govert.</p>
+        ) : (
+          <>
+            <section className="sectie">
+              <label htmlFor="notitie" className="vraag">{inhoud.vraag}</label>
+              <Opname token={token} momentId={id} opnames={opnames} onNieuw={onOpname} />
+              <textarea id="notitie" value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je opvalt…" />
+            </section>
+            <section className="sectie">
+              <span className="vraag" style={{ fontSize: 22 }}>Waar heb je de komende tijd het meest aan?</span>
+              <div className="keuzes">
+                {(Object.keys(SLOT_KEUZES) as (keyof typeof SLOT_KEUZES)[]).map((k) => (
+                  <button key={k} type="button" className="keuze" aria-pressed={data.keuze === k} onClick={() => zet({ keuze: k })}>
+                    <b>{SLOT_KEUZES[k].label}</b><span>{SLOT_KEUZES[k].uitleg}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+            <p className="status" aria-live="polite">{status}</p>
+            <button type="button" className="knop" onClick={klaar}><span>Terug naar de route</span><Pijl /></button>
+          </>
+        )}
       </div>
     );
   }
@@ -341,17 +398,11 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
           <span className="mono gedempt">Bij het waypoint</span>
           <label htmlFor="notitie" className="vraag">{inhoud.vraag}</label>
           <Opname token={token} momentId={id} opnames={opnames} onNieuw={onOpname} />
-          <textarea id="notitie" value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je bezighoudt…" />
+          <textarea id="notitie" style={inhoud.doorgeef ? { background: 'var(--goud-zacht)', borderColor: 'var(--goud-rand)' } : undefined} value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je bezighoudt…" />
+          {inhoud.doorgeef && <span className="hint" style={{ fontSize: 13, color: 'var(--gedempt)' }}>Wat je hier typt, staat bovenaan de volgende leg.</span>}
         </section>
       )}
 
-      {inhoud.doorgeef && (
-        <div className="veld">
-          <label htmlFor="door">{inhoud.doorgeef}</label>
-          <input id="door" type="text" className="doorgeef" value={data.door ?? ''} onChange={(e) => zet({ door: e.target.value })} />
-          <span className="hint">Deze zin staat bovenaan het volgende moment.</span>
-        </div>
-      )}
 
       <p className="status" aria-live="polite">{status}</p>
 

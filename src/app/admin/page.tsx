@@ -11,6 +11,7 @@ type Overzicht = {
   basis: string;
   momenten: { id: string; titel: string; route: string; code: string | null }[];
   deelnemers: Deelnemer[];
+  opnames: { totaal: number; uitgeschreven: number };
 };
 
 const leeg = { naam: '', telefoon: '', vak: '', h: [{ titel: '', tekst: '' }, { titel: '', tekst: '' }, { titel: '', tekst: '' }] as Hoofdstuk[] };
@@ -39,6 +40,7 @@ export default function Admin() {
       {melding && <p className="fout" role="alert">{melding}</p>}
       {ov && <>
         <Deelnemers ov={ov} onWijzig={laad} />
+        <Transcriptie ov={ov} onWijzig={laad} />
         <Codewoorden ov={ov} />
         <EventInstellingen ov={ov} onWijzig={laad} />
       </>}
@@ -179,6 +181,39 @@ function EventInstellingen({ ov, onWijzig }: { ov: Overzicht; onWijzig: () => vo
           <textarea id="er" value={e.reflectie_vuur} onChange={(x) => setE({ ...e, reflectie_vuur: x.target.value })} /></div>
         <div className="rij" style={{ justifyContent: 'flex-start' }}><button className="knop" type="submit" style={{ width: 'auto' }}><span>Opslaan</span></button><span className="status">{status}</span></div>
       </form>
+    </section>
+  );
+}
+
+function Transcriptie({ ov, onWijzig }: { ov: Overzicht; onWijzig: () => void }) {
+  const [bezig, setBezig] = useState(false);
+  const [melding, setMelding] = useState('');
+  const open = ov.opnames.totaal - ov.opnames.uitgeschreven;
+  async function start() {
+    setBezig(true); setMelding('');
+    let rest = open, gedaan = 0;
+    for (let ronde = 0; ronde < 200 && rest > 0; ronde++) {
+      const r = await fetch('/api/admin/transcriberen', { method: 'POST' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { setMelding(j.fout ?? 'Uitschrijven lukte niet.'); break; }
+      gedaan += j.gedaan; rest = j.resterend;
+      setMelding(`${gedaan} uitgeschreven, nog ${rest} te gaan…`);
+      if (j.fouten?.length && j.gedaan === 0) { setMelding(`Gestopt: ${j.fouten[0]}`); break; }
+    }
+    if (rest === 0) setMelding(`Klaar: ${gedaan} opnames uitgeschreven.`);
+    setBezig(false); onWijzig();
+  }
+  return (
+    <section className="sectie">
+      <h2 style={{ fontSize: 30 }}>Opnames</h2>
+      <div className="kaart">
+        <p>{ov.opnames.totaal} opnames, waarvan {ov.opnames.uitgeschreven} uitgeschreven.</p>
+        <p style={{ color: 'var(--gedempt)', fontSize: 14 }}>Druk na de dag op de knop. De tekst verschijnt daarna in ieders terugblik.</p>
+        <div className="rij" style={{ justifyContent: 'flex-start' }}>
+          <button className="knop" style={{ width: 'auto' }} disabled={bezig || open === 0} onClick={start}><span>{bezig ? 'Bezig…' : `Schrijf ${open} opnames uit`}</span></button>
+          <span className="status" aria-live="polite">{melding}</span>
+        </div>
+      </div>
     </section>
   );
 }

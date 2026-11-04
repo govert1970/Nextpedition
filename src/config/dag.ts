@@ -16,14 +16,16 @@ export type MomentInhoud = {
   velden?: Veld[];
   energiekaart?: boolean; // de 2×2-kaart van Advanced Basecamp
   vraag?: string; // reflectievraag bij het waypoint (typen of inspreken)
-  doorgeef?: string; // label van de zin die mee gaat naar het volgende moment
+  doorgeef?: boolean; // het antwoord op de vraag staat bovenaan het volgende moment
 };
 
 export type Moment = {
   id: string;
   route: string; // wat op de route staat zolang het moment dicht is
-  soort: 'basecamp' | 'leg' | 'stop' | 'slot';
+  soort: 'basecamp' | 'leg' | 'stop' | 'terugblik';
   dicht: boolean; // gaat pas open met een codewoord
+  opent?: string; // gaat vanzelf open op dit moment (ISO-datum)
+  sluit?: string; // daarna kan er niets meer worden ingevuld
   inhoud: MomentInhoud;
 };
 
@@ -45,8 +47,6 @@ export const MOMENTEN: Moment[] = [
         'Ga op de tijdlijn staan, in de tijd van je vak, en vertel het in één minuut.',
         'Brief van toen: lees hem in stilte terug. Heb je hem niet meer? Schrijf in één zin op wat je toen hoopte.',
       ],
-      velden: [{ id: 'vak', label: 'Mijn vak, plaats en tijd' }],
-      vraag: 'Wat zag je terug in je brief, of wat hoopte je toen?',
     },
   },
   {
@@ -60,8 +60,8 @@ export const MOMENTEN: Moment[] = [
         'Spiegel: benoem het patroon dat je hoorde en dat de verteller zelf niet uitsprak.',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
-      vraag: 'Welk patroon benoemde je spiegel, en klopt dat voor jou?',
-      doorgeef: 'Het patroon in één zin',
+      vraag: 'Welk patroon benoemde je spiegel? Zeg het in één of een paar zinnen.',
+      doorgeef: true,
     },
   },
   {
@@ -72,13 +72,12 @@ export const MOMENTEN: Moment[] = [
       chips: ['Bang', 'Boos', 'Blij', 'Bedroefd', 'Gevoelloos'], laatsteChipGestippeld: true,
       start: 'Begin bij je patroon uit leg 1: welke emotie zit eronder?',
       rondes: [
-        'Als elke emotie een persoon was: hoe dichtbij staat die bij jou? Wie houd je liever op afstand?',
+        'Als elke emotie een persoon was: hoe is je relatie met die persoon? Hoe dichtbij staat die bij jou, en wie houd je liever op afstand? Wil je iets veranderen aan die relatie?',
         'Hoe reageer je als je die emotie bij een ander tegenkomt?',
-        'Wat valt je op in je antwoorden? Zie je een patroon?',
+        'Wat valt je op in je antwoorden? Zie je een patroon? Wat kost het, en wat levert het op?',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
-      vraag: 'Welke emotie staat het verst van je af, en wat kost je dat?',
-      doorgeef: 'De emotie die je het verst weghoudt',
+      vraag: 'Welke emotie staat het verst van je af, en wat kost je dat? Welke staat het dichtst bij, en wat levert dat op? Andere inzichten mogen ook.',
     },
   },
   {
@@ -92,18 +91,14 @@ export const MOMENTEN: Moment[] = [
         'Wat vraagt je volgende curve van je, en wanneer zou je eraan moeten beginnen?',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
-      velden: [{ id: 'fase', label: 'Waar ik nu sta op mijn curve' }],
-      vraag: 'Wat zou je moeten loslaten om aan je volgende curve te beginnen?',
-      doorgeef: 'Waar je op je curve staat, in één zin',
+      vraag: 'Waar sta je op je curve, en wat zou je moeten loslaten of juist beetpakken om aan de volgende te beginnen? Andere inzichten mogen ook.',
     },
   },
   {
     id: 'lunch', route: 'Advanced Basecamp', soort: 'stop', dicht: true,
     inhoud: {
       label: 'ADVANCED BASECAMP · LUNCH', titel: 'Waar gaat je energie naartoe?',
-      concept: 'Je agenda van de afgelopen twee weken, in trefwoorden. Tien minuten, aan tafel.',
-      energiekaart: true,
-      velden: [{ id: 'curve', label: 'Klopt je kaart met waar je op je curve staat?' }],
+      concept: 'Vul aan tafel de energiekaart op papier in: je agenda van de afgelopen twee weken, in trefwoorden. Kijk vooral naar het gouden vak: lage energie, hoge waarde. Neem de kaart mee naar leg 4.',
     },
   },
   {
@@ -118,8 +113,8 @@ export const MOMENTEN: Moment[] = [
         'Kies je kwestie voor de trojka in de volgende leg.',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
-      vraag: 'Wat zou je neerleggen, en wat houdt je tegen?',
-      doorgeef: 'Je kwestie voor de trojka',
+      vraag: 'Welke kwestie neem je mee naar de trojka? Zeg het in één of een paar zinnen.',
+      doorgeef: true,
     },
   },
   {
@@ -127,55 +122,60 @@ export const MOMENTEN: Moment[] = [
     inhoud: {
       label: 'LEG 5 · TROJKA', titel: 'Trojka',
       concept: 'Eén inbrenger, twee adviseurs. Iedereen is één keer inbrenger.',
+      start: 'Deze leg begint in stilte. Loop vijf minuten zonder te praten en denk na over de kwestie die je inbrengt.',
       rondes: [
         'Inbrenger: leg je kwestie voor. De anderen vragen alleen door.',
         'Inbrenger loopt een stukje vooruit en luistert mee. De twee adviseurs bespreken de kwestie hardop.',
         'Inbrenger sluit weer aan: wat neem je mee, wat laat je liggen?',
       ],
-      vraag: 'Welk advies blijft hangen?',
-      doorgeef: 'Het advies dat je meeneemt',
+      vraag: 'Wat kwam binnen, en wat raakte niet? Wat neem je mee aan inzicht?',
     },
   },
   {
-    id: 'e6', route: 'Leg 6', soort: 'leg', dicht: true,
+    id: 'stil', route: 'Laatste leg', soort: 'leg', dicht: true,
     inhoud: {
-      label: 'LEG 6 · DRIETAL', titel: 'Spijt voorkomen',
-      concept: 'Over tien jaar: welke spijt zit er in je werk aan te komen?',
+      label: 'LAATSTE LEG · IN STILTE', titel: 'Terug naar Basecamp',
+      concept: 'Je loopt terug in stilte, alleen met je gedachten. Denk terug aan de dag: de mensen, de gesprekken, wat je raakte.',
+      vraag: 'Terug in Basecamp: wat gaat er door je heen als je terugdenkt aan vandaag?',
+    },
+  },
+  {
+    id: 'buddy', route: 'Basecamp Buddy’s', soort: 'stop', dicht: true,
+    inhoud: {
+      label: 'BASECAMP · BUDDY’S', titel: 'Spijt voorkomen',
+      concept: 'Met je buddy uit je eigen leergang. Over tien jaar: welke spijt zit er in je werk aan te komen?',
       rondes: [
         'Welke spijt wil je voorkomen? Maak het concreet: welk besluit, welke persoon.',
-        'Ontwerp één klein, veilig experiment voor de komende weken. Gebruik het advies uit de trojka.',
-        'Spreek af wie uit dit drietal je over zes weken belt.',
+        'Ontwerp één klein, veilig experiment voor de komende weken. Gebruik eventueel het advies uit de trojka.',
+        'Je buddy belt je over zes weken om te vragen hoe het ging. Spreek af wanneer.',
       ],
       velden: [
         { id: 'exp', label: 'Mijn experiment, in één zin' },
-        { id: 'bel', label: 'Wie belt mij' },
-        { id: 'datum', label: 'Wanneer (over zes weken)' },
+        { id: 'bel', label: 'Mijn buddy, en wanneer we bellen' },
       ],
-      vraag: 'Wat maakt dit experiment voor jou spannend?',
     },
   },
   {
-    id: 'pijplijn', route: 'Basecamp', soort: 'stop', dicht: true,
+    id: 'groep', route: 'Groepsopdracht', soort: 'stop', dicht: true,
     inhoud: {
-      label: 'BASECAMP · GROEPSOPDRACHT', titel: 'De pijplijn',
-      concept: 'Loslaten en doorlopen.',
-      rondes: ['Breng samen de bal naar de emmer, alleen via de buizen. Je mag niet lopen terwijl de bal in jouw buis ligt.'],
-      vraag: 'Wanneer moest je loslaten om door te kunnen, en wanneer bleef je hangen?',
+      label: 'BASECAMP · GROEPSOPDRACHT', titel: 'Groepsopdracht',
+      concept: 'De uitleg krijg je ter plekke.',
     },
   },
   {
     id: 'vuur', route: 'Kampvuur', soort: 'stop', dicht: true,
     inhoud: {
-      label: 'KAMPVUUR', titel: 'Brief van nu',
-      concept: 'Een brief aan jezelf, een jaar vooruit.',
-      vraag: 'Wat schrijf je jezelf? Begin bij je experiment.',
+      label: 'KAMPVUUR', titel: 'Een kaart aan jezelf',
+      concept: 'Bij het vuur schrijf je een korte kaart aan jezelf, op papier.',
     },
   },
   {
-    id: 'slot', route: 'Afronding', soort: 'slot', dicht: true,
+    id: 'terugblik', route: 'Terugblik', soort: 'terugblik', dicht: false,
+    opent: '2026-11-13T00:00:00+01:00', sluit: '2026-11-18T00:00:00+01:00',
     inhoud: {
-      label: 'AFRONDING', titel: 'Waar heb je de komende tijd het meest aan?',
-      concept: 'Je keuze bepaalt het laatste deel van je verslag. Er is geen betere of slechtere keuze.',
+      label: 'TERUGBLIK', titel: 'Terugblik op je dag',
+      concept: 'Een paar dagen later. Lees terug wat je onderweg vastlegde, en kijk wat er nu opvalt.',
+      vraag: 'Wat valt op? Wat blijft bij?',
     },
   },
 ];

@@ -10,10 +10,21 @@ import { versleutel, type Versleuteld } from '@/lib/crypto';
 let _db: SupabaseClient | null = null;
 export function db(): SupabaseClient {
   if (_db) return _db;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_URL?.trim().replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!url || !key) throw new Error('SUPABASE_URL en SUPABASE_SERVICE_ROLE_KEY ontbreken in de omgeving.');
-  _db = createClient(url, key, { auth: { persistSession: false } });
+  // Nieuwe Supabase-sleutels (sb_secret_…) zijn geen JWT en horen alleen in de apikey-header,
+  // nooit als Bearer-token. Deze versie van supabase-js stuurt ze wel als Bearer; dat halen we hier weg.
+  const nieuweSleutel = key.startsWith('sb_secret_') || key.startsWith('sb_publishable_');
+  const zonderBearer: typeof fetch = (input, init) => {
+    const headers = new Headers(init?.headers);
+    if (headers.get('Authorization') === `Bearer ${key}`) headers.delete('Authorization');
+    return fetch(input, { ...init, headers });
+  };
+  _db = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    ...(nieuweSleutel ? { global: { fetch: zonderBearer } } : {}),
+  });
   return _db;
 }
 
@@ -49,7 +60,7 @@ export async function deelnemerBijToken(token: string): Promise<{ deelnemer: Dee
 
 // ---------- Inhoud van de dag ----------
 export type PubliekMoment =
-  | { id: string; route: string; soort: string; dicht: false; inhoud: MomentInhoud }
+  | { id: string; route: string; soort: string; dicht: false; inhoud: MomentInhoud; opent?: string; sluit?: string }
   | { id: string; route: string; soort: string; dicht: true; slot: Versleuteld };
 
 let _inhoud: Promise<PubliekMoment[]> | null = null;
@@ -58,7 +69,7 @@ export function dagInhoud(): Promise<PubliekMoment[]> {
   if (_inhoud) return _inhoud;
   _inhoud = Promise.all(
     MOMENTEN.map(async (m): Promise<PubliekMoment> => {
-      if (!m.dicht) return { id: m.id, route: m.route, soort: m.soort, dicht: false, inhoud: m.inhoud };
+      if (!m.dicht) return { id: m.id, route: m.route, soort: m.soort, dicht: false, inhoud: m.inhoud, opent: m.opent, sluit: m.sluit };
       const code = CODEWOORDEN[m.id];
       if (!code) throw new Error(`Geen codewoord voor moment ${m.id}`);
       return { id: m.id, route: m.route, soort: m.soort, dicht: true, slot: await versleutel(m.inhoud, code) };
