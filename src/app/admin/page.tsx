@@ -35,13 +35,12 @@ export default function Admin() {
 
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', paddingBlock: 24, paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))', display: 'flex', flexDirection: 'column', gap: 28 }}>
-      <div className="rij"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXTPEDITION · FACILITATOR</span>
+      <div className="rij"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXPEDITIE · FACILITATOR</span>
         <button className="knop licht" style={{ width: 'auto', minHeight: 44 }} onClick={laad}>Vernieuwen</button></div>
       {melding && <p className="fout" role="alert">{melding}</p>}
       {ov && <>
         <Deelnemers ov={ov} onWijzig={laad} />
         <Transcriptie ov={ov} onWijzig={laad} />
-        <Codewoorden ov={ov} />
         <EventInstellingen ov={ov} onWijzig={laad} />
       </>}
     </main>
@@ -52,7 +51,7 @@ function Login({ onKlaar }: { onKlaar: () => void }) {
   const [pw, setPw] = useState(''); const [fout, setFout] = useState('');
   return (
     <main className="app"><div className="inhoud" style={{ marginTop: 60 }}>
-      <span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXTPEDITION · FACILITATOR</span>
+      <span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXPEDITIE · FACILITATOR</span>
       <form className="slotkaart" onSubmit={async (e) => {
         e.preventDefault(); setFout('');
         const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ wachtwoord: pw }) });

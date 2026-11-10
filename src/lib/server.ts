@@ -52,7 +52,7 @@ export async function deelnemerBijToken(token: string): Promise<{ deelnemer: Dee
   const event = (data as { events: Event }).events;
   const nu = Date.now();
   if (nu < Date.parse(event.geldig_van) || nu > Date.parse(event.geldig_tot)) {
-    return { fout: 'Deze link werkt alleen rond de dag van de Nextpedition.', status: 403 };
+    return { fout: 'Deze link werkt alleen rond de dag van de Nexpeditie.', status: 403 };
   }
   const { events: _e, ...deelnemer } = data as Deelnemer & { events: Event };
   return { deelnemer, event };

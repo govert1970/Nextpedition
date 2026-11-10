@@ -22,7 +22,7 @@ export async function GET() {
   return json({
     event,
     basis: process.env.PUBLIC_BASE_URL ?? '',
-    momenten: MOMENTEN.map((m) => ({ id: m.id, titel: m.inhoud.titel, route: m.route, code: CODEWOORDEN[m.id] ?? null })),
+    momenten: MOMENTEN.filter((m) => m.soort !== 'terugblik' && (m.inhoud.vraag || m.inhoud.velden || m.inhoud.energiekaart)).map((m) => ({ id: m.id, titel: m.inhoud.titel, route: m.route, code: CODEWOORDEN[m.id] ?? null })),
     opnames: { totaal: (opnames ?? []).length, uitgeschreven: (opnames ?? []).filter((o) => o.transcript !== null).length },
     deelnemers: (deelnemers ?? []).map((d) => ({
       ...d,
