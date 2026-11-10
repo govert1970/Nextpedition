@@ -1,6 +1,6 @@
 // De inhoud van de dag. Teksten kun je hier aanpassen zonder dat er iets herbouwd hoeft te worden:
 // alleen het soort invoer per moment (velden, kaart, doorgeefzin) bepaalt welk scherm er komt.
-// Codewoorden staan apart in codewoorden.ts (alleen op de server).
+// Alle momenten zijn open: de vragen staan ook in de gedrukte veldgids. Codewoorden worden niet meer gebruikt.
 
 export type Veld = { id: string; label: string };
 
@@ -50,7 +50,7 @@ export const MOMENTEN: Moment[] = [
     },
   },
   {
-    id: 'e1', route: 'Leg 1', soort: 'leg', dicht: true,
+    id: 'e1', route: 'Leg 1', soort: 'leg', dicht: false,
     inhoud: {
       label: 'LEG 1 · DRIETAL', titel: 'Toen en nu',
       concept: 'Je verhaal sinds de Expeditie, in drie hoofdstukken.',
@@ -65,108 +65,95 @@ export const MOMENTEN: Moment[] = [
     },
   },
   {
-    id: 'e2', route: 'Leg 2', soort: 'leg', dicht: true,
+    id: 'e2', route: 'Leg 2', soort: 'leg', dicht: false,
     inhoud: {
-      label: 'LEG 2 · DRIETAL', titel: 'Emotional map',
-      concept: 'Vier basisemoties, en de vijfde: het gebrek aan emotie.',
-      chips: ['Bang', 'Boos', 'Blij', 'Bedroefd', 'Gevoelloos'], laatsteChipGestippeld: true,
-      start: 'Begin bij je patroon uit leg 1: welke emotie zit eronder?',
+      label: 'LEG 2 · DRIETAL', titel: 'Emotionele kaart',
+      concept: 'Vaak worden vier basisemoties genoemd: angst, boosheid, verdriet en blijdschap. Daarnaast is er een andere positie: gevoelloosheid, het gebrek aan emotie. Bij de ene emotie kom je makkelijker dan bij de andere. Je beschrijft je relatie met elke emotie alsof het een persoon is. De spiegel geeft terug wat hij hoort.',
+      chips: ['Angst', 'Boosheid', 'Verdriet', 'Blijdschap', 'Gevoelloosheid'], laatsteChipGestippeld: true,
       rondes: [
-        'Als elke emotie een persoon was: hoe is je relatie met die persoon? Hoe dichtbij staat die bij jou, en wie houd je liever op afstand? Wil je iets veranderen aan die relatie?',
+        'Als elke emotie een persoon was: hoe dichtbij staat die bij jou? Hoe zou je je relatie ermee beschrijven, en ben je daar blij mee?',
         'Hoe reageer je als je die emotie bij een ander tegenkomt?',
-        'Wat valt je op in je antwoorden? Zie je een patroon? Wat kost het, en wat levert het op?',
+        'Wat valt je op in je antwoorden?',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
       vraag: 'Welke emotie staat het verst van je af, en wat kost je dat? Welke staat het dichtst bij, en wat levert dat op? Andere inzichten mogen ook.',
     },
   },
   {
-    id: 'e3', route: 'Leg 3', soort: 'leg', dicht: true,
+    id: 'e3', route: 'Leg 3', soort: 'leg', dicht: false,
     inhoud: {
-      label: 'LEG 3 · DRIETAL', titel: 'Je volgende curve',
-      concept: 'Elke fase volgt een S-curve: opstarten, groeien, afvlakken. Begin aan de volgende voordat de huidige zijn top bereikt.',
+      label: 'LEG 3 · DRIETAL', titel: 'Je volgende beklimming',
+      concept: 'Charles Handy: alles wat groeit, ook een loopbaan, volgt een S-curve van opstarten, groeien en afvlakken. Begin aan de volgende curve vóór de top van de huidige (punt A). Waar je staat, hangt af van hoe lang je in je curve zit, niet van je leeftijd.',
       rondes: [
-        'Waar op je curve sta je nu: opstarten, groeien of afvlakken? Hoeveel curves heb je al doorlopen?',
-        'Wat heeft je hier gebracht, en wat houd je daarvan vast terwijl het je volgende stap niet meer helpt?',
-        'Wat vraagt je volgende curve van je, en wanneer zou je eraan moeten beginnen?',
+        'Waar op je curve sta je nu? Hoeveel curves heb je gehad?',
+        'Wat heeft je hier gebracht, en wat houd je vast terwijl het je volgende stap niet meer helpt?',
+        'Wat vraagt je volgende curve van je, en wanneer begin je aan de voorbereiding van deze nieuwe beklimming?',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
       vraag: 'Waar sta je op je curve, en wat zou je moeten loslaten of juist beetpakken om aan de volgende te beginnen? Andere inzichten mogen ook.',
     },
   },
   {
-    id: 'lunch', route: 'Advanced Basecamp', soort: 'stop', dicht: true,
+    id: 'lunch', route: 'Advanced Basecamp', soort: 'stop', dicht: false,
     inhoud: {
       label: 'ADVANCED BASECAMP · LUNCH', titel: 'Waar gaat je energie naartoe?',
-      concept: 'Vul aan tafel de energiekaart op papier in: je agenda van de afgelopen twee weken, in trefwoorden. Kijk vooral naar het gouden vak: lage energie, hoge waarde. Neem de kaart mee naar leg 4.',
+      concept: 'Vul aan tafel de energiekaart in je veldgids in: je agenda van de afgelopen twee weken, in trefwoorden. Kijk vooral naar het gouden vak: lage energie, hoge waarde. Je hebt de kaart nodig in leg 4.',
     },
   },
   {
-    id: 'e4', route: 'Leg 4', soort: 'leg', dicht: true,
+    id: 'e4', route: 'Leg 4', soort: 'leg', dicht: false,
     inhoud: {
       label: 'LEG 4 · DRIETAL', titel: 'Wat draag je mee?',
-      concept: 'Wat je zelf kiest, weegt anders dan wat op je bord belandt.',
-      start: 'Pak je energiekaart erbij.',
+      concept: 'Hoe zwaar iets voelt, hangt meer af van of je er zelf voor kiest dan van de hoeveelheid. Uit de positieve psychologie: veerkracht groeit niet alleen door minder te dragen, maar ook door wat je kracht geeft: je sterke kanten, mensen om je heen en momenten van herstel. Open je kaart.',
       rondes: [
-        'Wat staat er in ‘lage energie, hoge waarde’? Wat daarvan heb je zelf gekozen, en wat is op je bord beland?',
-        'Wat had je allang neergelegd als je niet bang was iets te verliezen? Welke emotie van je kaart houdt je daar?',
-        'Kies je kwestie voor de trojka in de volgende leg.',
+        'Wat staat er in ‘lage energie, hoge waarde’? Wat heb je zelf gekozen, en wat is op je bord beland?',
+        'Wat staat er in ‘hoge energie, hoge waarde’? Wat geeft je daar kracht?',
+        'Wat stop je in je rugzak: iets lichts, waar je veel aan hebt?',
+        'Wat had je allang neergelegd als je niet bang was iets te verliezen? Welke emotie houdt je daar?',
       ],
       rolwissel: 'Wissel drie keer van rol, zodat iedereen één keer verteller is.',
-      vraag: 'Welke kwestie neem je mee naar de trojka? Zeg het in één of een paar zinnen.',
-      doorgeef: true,
+      vraag: 'Wat stop je in je rugzak, en wat leg je neer? Andere inzichten mogen ook.',
     },
   },
   {
-    id: 'e5', route: 'Leg 5', soort: 'leg', dicht: true,
+    id: 'e5', route: 'Leg 5', soort: 'leg', dicht: false,
     inhoud: {
       label: 'LEG 5 · TROJKA', titel: 'Trojka',
-      concept: 'Eén inbrenger, twee adviseurs. Iedereen is één keer inbrenger.',
-      start: 'Deze leg begint in stilte. Loop vijf minuten zonder te praten en denk na over de kwestie die je inbrengt.',
+      concept: 'Eén inbrenger, twee adviseurs. De eerste minuten loop je in stilte. Daarna lopen jullie gewoon naast elkaar verder. De adviseurs praten hardop met elkaar over de kwestie; de inbrenger luistert alleen. Iedereen is één keer inbrenger.',
       rondes: [
-        'Inbrenger: leg je kwestie voor. De anderen vragen alleen door.',
-        'Inbrenger loopt een stukje vooruit en luistert mee. De twee adviseurs bespreken de kwestie hardop.',
-        'Inbrenger sluit weer aan: wat neem je mee, wat laat je liggen?',
+        'De inbrenger legt zijn kwestie voor. De adviseurs vragen alleen door.',
+        'De inbrenger luistert. De adviseurs bespreken de kwestie hardop met elkaar.',
+        'De inbrenger reageert: wat neem je mee, wat laat je liggen?',
       ],
       vraag: 'Wat kwam binnen, en wat raakte niet? Wat neem je mee aan inzicht?',
     },
   },
   {
-    id: 'stil', route: 'Laatste leg', soort: 'leg', dicht: true,
+    id: 'stil', route: 'Leg 6', soort: 'leg', dicht: false,
     inhoud: {
-      label: 'LAATSTE LEG · IN STILTE', titel: 'Terug naar Basecamp',
-      concept: 'Je loopt terug in stilte, alleen met je gedachten. Denk terug aan de dag: de mensen, de gesprekken, wat je raakte.',
+      label: 'LEG 6 · IN STILTE', titel: 'Terug naar Basecamp',
+      concept: 'Je loopt terug naar Basecamp zonder te praten. Alleen jij, het pad en wat de dag heeft losgemaakt.',
       vraag: 'Terug in Basecamp: wat gaat er door je heen als je terugdenkt aan vandaag?',
     },
   },
   {
-    id: 'buddy', route: 'Basecamp Buddy’s', soort: 'stop', dicht: true,
+    id: 'buddy', route: 'Terug in Basecamp', soort: 'stop', dicht: false,
     inhoud: {
-      label: 'BASECAMP · BUDDY’S', titel: 'Spijt voorkomen',
-      concept: 'Met je buddy uit je eigen leergang. Over tien jaar: welke spijt zit er in je werk aan te komen?',
+      label: 'TERUG IN BASECAMP · MAATJES', titel: 'Op wiens schouders',
+      concept: 'Uit de positieve psychologie: je sterke kanten zie je het best in een moment waarop je op je best was. Wie een sterke kant op een nieuwe manier inzet, merkt daar ook maanden later nog iets van. Niemand komt daar alleen: je staat op de schouders van anderen. Wie die mensen bedankt, of zelf de schouders voor een ander wordt, maakt iets los dat blijft. Je doet dit met je maatje, iemand uit je eigen jaargang. Jullie zijn allebei een keer aan de beurt.',
       rondes: [
-        'Welke spijt wil je voorkomen? Maak het concreet: welk besluit, welke persoon.',
-        'Ontwerp één klein, veilig experiment voor de komende weken. Gebruik eventueel het advies uit de trojka.',
-        'Je buddy belt je over zes weken om te vragen hoe het ging. Spreek af wanneer.',
+        'Vertel over een moment waarop je echt op je best was, in je werk of daarbuiten. Wat deed je precies?',
+        'Maatje: welke sterke kanten hoor je in dat verhaal?',
+        'Op wiens schouders stond je daar? Wie heeft je geholpen om zo te worden?',
+        'Kies je experiment: zet één sterke kant de komende zes weken op een nieuwe manier in. Bijvoorbeeld in een andere rol, bij andere mensen, of door er iemand anders mee op weg te helpen.',
+        'Bedank deze of volgende week degene op wiens schouders je stond.',
+        'Spreek af wanneer je maatje je belt.',
       ],
       velden: [
-        { id: 'exp', label: 'Mijn experiment, in één zin' },
-        { id: 'bel', label: 'Mijn buddy, en wanneer we bellen' },
+        { id: 'exp', label: 'Mijn experiment' },
+        { id: 'dank', label: 'Wie ga ik bedanken?' },
+        { id: 'bel', label: 'Mijn maatje, en wanneer we bellen' },
       ],
-    },
-  },
-  {
-    id: 'groep', route: 'Groepsopdracht', soort: 'stop', dicht: true,
-    inhoud: {
-      label: 'BASECAMP · GROEPSOPDRACHT', titel: 'Groepsopdracht',
-      concept: 'De uitleg krijg je ter plekke.',
-    },
-  },
-  {
-    id: 'vuur', route: 'Kampvuur', soort: 'stop', dicht: true,
-    inhoud: {
-      label: 'KAMPVUUR', titel: 'Een kaart aan jezelf',
-      concept: 'Bij het vuur schrijf je een korte kaart aan jezelf, op papier.',
     },
   },
   {

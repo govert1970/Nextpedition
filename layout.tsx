@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Nextpedition',
-  description: 'Logboek voor de Nextpedition',
+  title: 'Nexpeditie',
+  description: 'Logboek voor de Nexpeditie',
   manifest: '/manifest.webmanifest',
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: 'Nextpedition', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'Nexpeditie', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {

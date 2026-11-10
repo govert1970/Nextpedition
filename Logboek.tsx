@@ -47,6 +47,13 @@ function heeftInhoud(d?: EntryData): boolean {
   return Boolean(d.notes?.trim() || d.door?.trim() || d.keuze || Object.values(d.fields ?? {}).some((v) => v?.trim()));
 }
 
+/** Laat een tekstvak meegroeien met de tekst, zodat je alles kunt teruglezen. */
+function groei(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight + 2}px`;
+}
+
 export default function Logboek({ token }: { token: string }) {
   const [bundel, setBundel] = useState<Bundel | null>(null);
   const [fout, setFout] = useState('');
@@ -127,8 +134,8 @@ export default function Logboek({ token }: { token: string }) {
   const klaar = useMemo(() => new Set(momenten.filter((m) => heeftInhoud(invoer[m.id]?.data)).map((m) => m.id)), [momenten, invoer]);
   const opnameMomenten = useMemo(() => new Set(opnames.map((o) => o.moment_id)), [opnames]);
 
-  if (fout) return <main className="app"><div className="melding"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXTPEDITION</span><p>{fout}</p></div></main>;
-  if (!bundel) return <main className="app"><div className="melding"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXTPEDITION</span><p className="mono gedempt">Laden…</p></div></main>;
+  if (fout) return <main className="app"><div className="melding"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXPEDITIE</span><p>{fout}</p></div></main>;
+  if (!bundel) return <main className="app"><div className="melding"><span className="woordmerk" style={{ color: 'var(--groen)' }}>NEXPEDITIE</span><p className="mono gedempt">Laden…</p></div></main>;
 
   const nu = Date.now();
   const tijdStatus = (m: Bundel['momenten'][number]): 'voor' | 'open' | 'na' => {
@@ -139,7 +146,13 @@ export default function Logboek({ token }: { token: string }) {
   };
   const metInvoer = (id: string) => { const i = open[id]; return !i || Boolean(i.vraag || i.velden?.length || i.energiekaart); };
   const telbaar = momenten.filter((m) => m.soort !== 'terugblik' && metInvoer(m.id));
-  const isKlaar = (id: string) => (metInvoer(id) ? klaar.has(id) || opnameMomenten.has(id) : Boolean(open[id]));
+  const ingevuld = (id: string) => klaar.has(id) || opnameMomenten.has(id);
+  // Momenten zonder invoer (Basecamp, lunch) tellen als gedaan zodra een later moment is ingevuld.
+  const isKlaar = (id: string) => {
+    if (metInvoer(id)) return ingevuld(id);
+    const i = momenten.findIndex((x) => x.id === id);
+    return momenten.some((x, j) => j > i && metInvoer(x.id) && ingevuld(x.id));
+  };
   const aantalKlaar = telbaar.filter((m) => isKlaar(m.id)).length;
   const nuId = [...momenten].reverse().find((m) => open[m.id] && m.dicht && !isKlaar(m.id))?.id
     ?? momenten.find((m) => open[m.id] && tijdStatus(m) === 'open' && !isKlaar(m.id))?.id;
@@ -154,7 +167,7 @@ export default function Logboek({ token }: { token: string }) {
       <main className="app">
         <header className="kop">
           <Topo />
-          <div className="rij"><span className="woordmerk">NEXTPEDITION</span><span className="mono licht">BEVER · ALUMNI</span></div>
+          <div className="rij"><span className="woordmerk">NEXPEDITIE</span><span className="mono licht">BEVER · ALUMNI</span></div>
           <h1 style={{ marginTop: 8, fontSize: 46 }}>Welkom,<br />{voornaam}</h1>
           <p className="lead">Zes legs, één route. Na elke leg houd je vast wat je raakte, door te typen of in te spreken.</p>
           <div className="sectie" style={{ gap: 8, marginTop: 6 }}>
@@ -198,7 +211,7 @@ export default function Logboek({ token }: { token: string }) {
 
   // zin uit het vorige moment met een doorgeefzin
   let vorige: { titel: string; zin: string } | null = null;
-  for (let j = idx - 1; j >= 0; j--) {
+  for (let j = idx - 1; j >= Math.max(0, idx - 1); j--) { // alleen het moment direct ervoor
     const vi = open[momenten[j].id];
     if (vi?.doorgeef) {
       const tekst = invoer[momenten[j].id]?.data.notes?.trim();
@@ -236,7 +249,7 @@ export default function Logboek({ token }: { token: string }) {
             volgende={volgende ? { titel: open[volgende.id]?.titel ?? volgende.route, ga: () => naar(volgende.id) } : null}
             klaar={naarRoute} />
         : ts === 'voor'
-          ? <div className="inhoud"><div className="slotkaart"><p>Dit moment gaat vanzelf open op {datumNL(m.dicht ? undefined : m.opent)}. Je hoeft dan geen codewoord in te vullen.</p></div></div>
+          ? <div className="inhoud"><div className="slotkaart"><p>Dit moment gaat vanzelf open op {datumNL(m.dicht ? undefined : m.opent)}.</p></div></div>
           : <Ontgrendel key={m.id} ontgrendel={ontgrendel} />}
     </main>
   );
@@ -314,7 +327,7 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
             <section className="sectie">
               <label htmlFor="notitie" className="vraag">{inhoud.vraag}</label>
               <Opname token={token} momentId={id} opnames={opnames} onNieuw={onOpname} />
-              <textarea id="notitie" value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je opvalt…" />
+              <textarea id="notitie" className="groeit" ref={groei} onInput={(e) => groei(e.currentTarget)} value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je opvalt…" />
             </section>
             <section className="sectie">
               <span className="vraag" style={{ fontSize: 22 }}>Waar heb je de komende tijd het meest aan?</span>
@@ -334,9 +347,11 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
     );
   }
 
+  // Op momenten met invoer staan uitleg en gespreksvragen in de gedrukte veldgids; de app toont alleen wat je vastlegt.
+  const alleenInvoer = Boolean(inhoud.vraag || inhoud.velden || inhoud.energiekaart);
   return (
     <div className="inhoud">
-      {(inhoud.concept || inhoud.chips) && (
+      {!alleenInvoer && (inhoud.concept || inhoud.chips) && (
         <section className="sectie">
           <span className="mono gedempt">Centraal</span>
           {inhoud.chips && (
@@ -350,6 +365,10 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
         </section>
       )}
 
+      {alleenInvoer && (inhoud.concept || inhoud.rondes) && (
+        <p style={{ fontSize: 14, color: 'var(--gedempt)' }}>De uitleg en de vragen voor het gesprek staan in je veldgids.</p>
+      )}
+
       {id === 'e1' && hoofdstukken.length > 0 && (
         <section className="sectie">
           <span className="mono gedempt">Jouw hoofdstukken</span>
@@ -359,10 +378,10 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
         </section>
       )}
 
-      {(inhoud.start || inhoud.rondes) && (
+      {!alleenInvoer && (inhoud.start || inhoud.rondes) && (
         <section className="kaart">
           <div className="rij"><span className="mono gedempt">{(inhoud.rondes?.length ?? 0) > 1 ? 'Het gesprek' : 'Opdracht'}</span>
-            {(inhoud.rondes?.length ?? 0) > 1 && <span style={{ fontSize: 13, color: 'var(--gedempt)' }}>Vrager · verteller · spiegel</span>}</div>
+            {inhoud.rolwissel && <span style={{ fontSize: 13, color: 'var(--gedempt)' }}>Vrager · verteller · spiegel</span>}</div>
           {inhoud.start && <p style={{ fontWeight: 600, fontSize: 16 }}>{inhoud.start}</p>}
           {inhoud.rondes && inhoud.rondes.length > 1 ? (
             <ol className="rondes">{inhoud.rondes.map((r, i) => <li key={i}><span className="nr">{i + 1}</span><span>{r}</span></li>)}</ol>
@@ -389,7 +408,7 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
       {inhoud.velden?.map((v) => (
         <div key={v.id} className="veld">
           <label htmlFor={`f-${v.id}`}>{v.label}</label>
-          <input id={`f-${v.id}`} type="text" value={data.fields?.[v.id] ?? ''} onChange={(e) => zetVeld(v.id, e.target.value)} />
+          <textarea id={`f-${v.id}`} className="groeit kort" ref={groei} value={data.fields?.[v.id] ?? ''} onChange={(e) => { zetVeld(v.id, e.target.value); groei(e.currentTarget); }} />
         </div>
       ))}
 
@@ -398,7 +417,7 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
           <span className="mono gedempt">Bij het waypoint</span>
           <label htmlFor="notitie" className="vraag">{inhoud.vraag}</label>
           <Opname token={token} momentId={id} opnames={opnames} onNieuw={onOpname} />
-          <textarea id="notitie" style={inhoud.doorgeef ? { background: 'var(--goud-zacht)', borderColor: 'var(--goud-rand)' } : undefined} value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je bezighoudt…" />
+          <textarea id="notitie" className="groeit" ref={groei} onInput={(e) => groei(e.currentTarget)} style={inhoud.doorgeef ? { background: 'var(--goud-zacht)', borderColor: 'var(--goud-rand)' } : undefined} value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je bezighoudt…" />
           {inhoud.doorgeef && <span className="hint" style={{ fontSize: 13, color: 'var(--gedempt)' }}>Wat je hier typt, staat bovenaan de volgende leg.</span>}
         </section>
       )}
