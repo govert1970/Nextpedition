@@ -324,17 +324,33 @@ function MomentScherm({ token, id, inhoud, bundel, invoer, opnames, bewaar, onOp
           <p className="slotkaart">De terugblik is gesloten. Je verslag komt binnenkort via Govert.</p>
         ) : (
           <>
+            {inhoud.velden?.map((v) => (
+              <section key={v.id} className="sectie">
+                <label htmlFor={`f-${v.id}`} className="vraag">{v.label}</label>
+                <textarea id={`f-${v.id}`} className="groeit kort" ref={groei} value={data.fields?.[v.id] ?? ''} onChange={(e) => { zetVeld(v.id, e.target.value); groei(e.currentTarget); }} />
+              </section>
+            ))}
             <section className="sectie">
-              <label htmlFor="notitie" className="vraag">{inhoud.vraag}</label>
+              <label htmlFor="notitie" className="vraag">{inhoud.velden ? 'Wat wil je verder nog kwijt?' : inhoud.vraag}</label>
               <Opname token={token} momentId={id} opnames={opnames} onNieuw={onOpname} />
-              <textarea id="notitie" className="groeit" ref={groei} onInput={(e) => groei(e.currentTarget)} value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Of typ hier wat je opvalt…" />
+              <textarea id="notitie" className="groeit" ref={groei} onInput={(e) => groei(e.currentTarget)} value={data.notes ?? ''} onChange={(e) => zet({ notes: e.target.value })} placeholder="Typ of spreek in…" />
             </section>
             <section className="sectie">
-              <span className="vraag" style={{ fontSize: 22 }}>Waar heb je de komende tijd het meest aan?</span>
+              <span className="vraag">Op basis van alles wat je hebt gedeeld, krijg je in je verslag een paar vragen of stappen. Waar heb je het meest aan?</span>
               <div className="keuzes">
                 {(Object.keys(SLOT_KEUZES) as (keyof typeof SLOT_KEUZES)[]).map((k) => (
                   <button key={k} type="button" className="keuze" aria-pressed={data.keuze === k} onClick={() => zet({ keuze: k })}>
                     <b>{SLOT_KEUZES[k].label}</b><span>{SLOT_KEUZES[k].uitleg}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section className="sectie">
+              <span className="vraag">Wil je in je verslag ook een persoonlijke reflectie van Govert, op basis van wat je hebt gedeeld?</span>
+              <div className="keuzes">
+                {([['ja', 'Ja, graag', 'Govert schrijft een korte persoonlijke reflectie.'], ['nee', 'Nee, dank je', 'Je verslag bestaat alleen uit je eigen woorden.']] as const).map(([k, l, u]) => (
+                  <button key={k} type="button" className="keuze" aria-pressed={data.fields?.reflectie === k} onClick={() => zetVeld('reflectie', k)}>
+                    <b>{l}</b><span>{u}</span>
                   </button>
                 ))}
               </div>
