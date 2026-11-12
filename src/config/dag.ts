@@ -161,8 +161,14 @@ export const MOMENTEN: Moment[] = [
     opent: '2026-11-13T00:00:00+01:00', sluit: '2026-11-18T00:00:00+01:00',
     inhoud: {
       label: 'TERUGBLIK', titel: 'Terugblik op je dag',
-      concept: 'Een paar dagen later. Lees terug wat je onderweg vastlegde, en kijk wat er nu opvalt.',
+      concept: 'Een paar dagen later. Lees eerst rustig terug wat je onderweg vastlegde, hieronder onder Jouw dag. Neem er daarna de tijd voor: deze terugblik is de basis van je verslag.',
       vraag: 'Wat valt op? Wat blijft bij?',
+      velden: [
+        { id: 'geraakt', label: 'Wat raakte je het meest in de verhalen van anderen?' },
+        { id: 'moment', label: 'Noem één moment uit een gesprek met een collega dat je bijblijft. Met naam en toenaam: wie was het, en wat gebeurde er?' },
+        { id: 'patroon', label: 'Wat zie je terugkomen in wat je schreef, over de legs heen?' },
+        { id: 'anders', label: 'Wat ga je de komende zes weken anders, bewuster, minder of meer doen? En waaraan merkt je maatje dat?' },
+      ],
     },
   },
 ];
